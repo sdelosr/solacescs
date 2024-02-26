@@ -1,0 +1,64 @@
+server:
+  port : 42069
+spring:
+  cloud:
+    function:
+      definition: messageListener;messagePublisher
+    stream:
+      # Spring generic bindings conf (beware of the Solace impl limitations)
+      bindings:
+        messageListener-in-0:
+          destination: test-consumer-queue-1
+          binder: solace-broker
+          consumer:
+            concurrency: 1
+          group: QUE
+        messageListener-out-0:
+          binder: solace-broker
+          destination: test-publisher-topic-1
+          group: QUE
+        messagePublisher-out-0:
+          binder: solace-broker
+          destination: test-consumer-topic-1
+        appEventPublisher-out-0:
+          binder: solace-broker
+          destination: test-app-events-topic-1
+      # Here lies - how to connect to the broker
+      binders:
+        solace-broker:
+          type: solace
+          environment:
+            solace:
+              java:
+                host: tcp://localhost:55554
+                msgVpn: default
+                clientUsername: user1
+                clientPassword: pass1
+                #No fancy trustStore, just trustMeBro™, for now
+      # Solace specific bindings conf
+      solace:
+        bindings:
+          messageListener-in-0:
+            consumer:
+              queueNameExpression: '"test-consumer-queue-1"'
+              provisionDurableQueue: false
+              provisionErrorQueue: false
+              addDestinationAsSubscriptionToQueue: false
+          messageListener-out-0:
+            producer:
+              queueNameExpression: '"test-publisher-topic-1"'
+              provisionDurableQueue: false
+              provisionErrorQueue: false
+              addDestinationAsSubscriptionToQueue: false
+          messagePublisher-out-0:
+            producer:
+              queueNameExpression: '"test-consumer-topic-1"'
+              provisionDurableQueue: false
+              addDestinationAsSubscriptionToQueue: false
+          appEventPublisher-out-0:
+            producer:
+              queueNameExpression: '"test-app-events-topic-1"'
+              provisionDurableQueue: false
+              addDestinationAsSubscriptionToQueue: false
+
+
